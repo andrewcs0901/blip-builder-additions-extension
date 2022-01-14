@@ -2,10 +2,16 @@ const path = require('path');
 
 const CopyPlugin = require('copy-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 const env = process.env.NODE_ENV || 'development';
 
 let plugins = [];
+const eslintOptions = {
+    extensions: [`js`, `jsx`, `ts`],
+    exclude: [`node_modules`],
+  };
+  
 
 module.exports = {
     mode: env,
@@ -18,12 +24,6 @@ module.exports = {
     devtool: 'cheap-module-source-map',
     module: {
         rules: [
-            {
-                test: /\.ts$/,
-                enforce: 'pre',
-                loader: 'tslint-loader',
-                exclude: /node_modules/
-            },
             {
                 test: /\.ts$/,
                 use: 'ts-loader',
@@ -61,6 +61,7 @@ module.exports = {
                     { from: './src/popup/img/', to: '../img'}
                 ]
         }),
+        new ESLintPlugin(eslintOptions),
         ...plugins
     ]
 };
