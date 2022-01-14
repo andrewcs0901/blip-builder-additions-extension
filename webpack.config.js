@@ -2,24 +2,16 @@ const path = require('path');
 
 const CopyPlugin = require('copy-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const ExtensionReloader = require('webpack-extension-reloader');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 const env = process.env.NODE_ENV || 'development';
 
 let plugins = [];
-switch (env) {
-    case "development":
-        plugins = [
-            new ExtensionReloader({
-                reloadPage: true,
-                entries: {
-                    background: 'background',
-                    contentScript: 'content'
-                }
-            })
-        ];
-        break;
-}
+const eslintOptions = {
+    extensions: [`js`, `jsx`, `ts`],
+    exclude: [`node_modules`],
+  };
+  
 
 module.exports = {
     mode: env,
@@ -29,15 +21,9 @@ module.exports = {
         injected: './src/injections/Inject.ts',
         background: './src/background/Background.ts'
     },
-    devtool: env === 'development' && 'source-map',
+    devtool: 'cheap-module-source-map',
     module: {
         rules: [
-            {
-                test: /\.ts$/,
-                enforce: 'pre',
-                loader: 'tslint-loader',
-                exclude: /node_modules/
-            },
             {
                 test: /\.ts$/,
                 use: 'ts-loader',
@@ -65,17 +51,17 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin(),
-        new CopyPlugin(
-            [
-                { from: './src/resources', to: '../resources', flatten: true },
-                { from: './manifest', to: '../manifest' },
-                { from: './manifest.json', to: '../' },
-                { from: './src/popup/pages', to: '../pages', flatten: true },
-                { from: './src/popup/img', to: '../img', flatten: true }
-            ],
-            {
-                copyUnmodified: true
-            }),
+        new CopyPlugin({
+            patterns:
+                [
+                    { from: './src/resources/', to: '../resources'},
+                    { from: './manifest', to: '../manifest' },
+                    { from: './manifest.json', to: '../' },
+                    { from: './src/popup/pages/', to: '../pages'},
+                    { from: './src/popup/img/', to: '../img'}
+                ]
+        }),
+        new ESLintPlugin(eslintOptions),
         ...plugins
     ]
 };
