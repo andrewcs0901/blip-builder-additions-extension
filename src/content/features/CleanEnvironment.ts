@@ -5,84 +5,105 @@ import FeatureBase from "./FeatureBase";
 export const USER_HEADER_SELECTOR = ".main-header-top:first-child";
 
 export default class CleanEnvironment extends FeatureBase {
-    private shouldHide: string[] = [
-        "#blip-chat-container",
-        ".builder-header-shadow:first-child",
-    ];
 
     private isShowingNavbar: boolean;
+    private defaultNavBarHeight: number;
 
     public onEnableFeature(): void {
         super.onEnableFeature();
         if (isBuilderLoaded) {
-            this.startAsync();
+            void this.startAsync();
         }
     }
 
     public onDisableFeature(): void {
         super.onDisableFeature();
-        this.stopAsync();
+        void this.stopAsync();
     }
 
     public onLoadBuilder(): void {
-        this.startAsync();
+        void this.startAsync();
     }
 
     public onUnloadBuilder(): void {
         super.onUnloadBuilder();
-        this.stopAsync();
+        void this.stopAsync();
     }
 
-    private async stopAsync(): Promise<void> {
-        this.toggleHidables(false);
+    private stopAsync(): void {
         this.removeHeaderCollapser();
         this.isShowingNavbar = false;
+        this.toggleMenu(false);
     }
 
-    private async startAsync(): Promise<void> {
+    private startAsync(): void {
         if (!this.isEnabled || document.getElementById("addictions-cleanenv-collapser")) {
             return;
         }
-
-        this.toggleHidables(true);
-        await this.addHeaderCollapser();
+        this.isShowingNavbar = false;
+        void this.addHeaderCollapser();
     }
 
     private async addHeaderCollapser(): Promise<void> {
         const res = await fetch(Utils.getUrl("resources/collapser.html"));
         const html = await res.text();
-
         const icons = document.querySelector(".bot-header-details");
         const collapserContainer = document.createElement("div");
+        (document.querySelector(".builder-footer") as HTMLElement).style.width = "fit-content";
+        (document.querySelector(".builder-footer") as HTMLElement).style.height = "1em";
+        (document.querySelector(".builder-container") as HTMLElement).style.height = "100%";
+        (document.querySelector(".icon-button-list") as HTMLElement).style.top = "30vh";
+        (document.querySelector(".icon-button-list") as HTMLElement).style.position = "fixed";
+        this.defaultNavBarHeight = (document.querySelector(".main-navbar-content") as HTMLElement).clientHeight;
+
         collapserContainer.innerHTML = html;
         icons.prepend(collapserContainer);
-        await Utils.sleep(20);
+        void Utils.sleep(20).then(() => {
+            const canvas = document.getElementById("canvas");
+            canvas.addEventListener("scroll", () => {
+                if ((document.querySelector(".main-navbar-content") as HTMLElement).clientHeight > this.defaultNavBarHeight || this.isShowingNavbar) {
+                    this.toggleMenu(true);
+                    this.isShowingNavbar = false;
+                }
+            })
+            canvas.addEventListener("mouseleave", () => {
+                    this.toggleMenu(false);
+                    this.isShowingNavbar = true;
+            })
+            window.addEventListener("scroll", () => {
+                if ((document.querySelector(".main-navbar-content") as HTMLElement).clientHeight < this.defaultNavBarHeight) {
+                    this.toggleMenu(false);
+                    this.isShowingNavbar = true;
+                }
+            })
+            const button = document.getElementById("addictions-cleanenv-collapser");
+            button.addEventListener("click", () => {
+                this.toggleMenu(this.isShowingNavbar);
+                this.isShowingNavbar = !this.isShowingNavbar;
+            });
 
-        const button = document.getElementById("addictions-cleanenv-collapser");
-        button.addEventListener("click", () => {
-            const collapser = document.getElementById("addictions-cleanenv-icon");
+        }
+        );
+    }
 
-            if (this.isShowingNavbar) {
-                collapser.className = "icon-arrowup";
-                document.getElementById("canvas").style.height = "";
-                (document.querySelector(".builder-container") as HTMLElement).style.height = "";
-            } else {
-                collapser.className = "icon-arrowdown";
-                document.getElementById("canvas").style.height = "calc(100vh - 56px)";
-                (document.querySelector(".builder-container") as HTMLElement).style.height = "calc(100vh - 56px)";
-            }
-
-            this.isShowingNavbar = !this.isShowingNavbar;
-            this.toggleElementDisplay(document.querySelector(USER_HEADER_SELECTOR), this.isShowingNavbar);
-        });
-
-        if (!this.isShowingNavbar) {
-            button.click();
+    private toggleMenu(enable: boolean) {
+        const collapser = document.getElementById("addictions-cleanenv-icon");
+        if (enable) {
+            if (collapser) collapser.className = "icon-arrowdown";
+            document.getElementById("canvas").style.height = "85vh";
+            (document.querySelector(".builder-undo-redo-icons") as HTMLElement).style.display = "none";
+            (document.querySelectorAll(".zoom-container").forEach(el => (el as HTMLElement).style.display = "none"));
+            (document.querySelector(".main-header") as HTMLElement).classList.add("main-header-collapsed");
+        } else {
+            if (collapser) collapser.className = "icon-arrowup";
+            document.getElementById("canvas").style.height = "calc(100vh - 165px)";
+            (document.querySelector(".builder-undo-redo-icons") as HTMLElement).style.display = "block";
+            (document.querySelectorAll(".zoom-container").forEach(el => (el as HTMLElement).style.display = "block"));
+            (document.querySelector(".main-header") as HTMLElement).classList.remove("main-header-collapsed");
         }
     }
 
     private removeHeaderCollapser(): void {
-        this.toggleElementDisplay(document.querySelector(USER_HEADER_SELECTOR), false);
 
         const canvas = document.getElementById("canvas");
         if (canvas) {
@@ -100,20 +121,4 @@ export default class CleanEnvironment extends FeatureBase {
         }
     }
 
-    private toggleHidables(toggle: boolean): void {
-        this.shouldHide.forEach((s) => {
-            const element = document.querySelector(s);
-            this.toggleElementDisplay(element, toggle);
-        });
-    }
-
-    private toggleElementDisplay(element: Element, toggle: boolean): void {
-        if (element && element.classList) {
-            if (toggle) {
-                element.classList.add("dn");
-            } else {
-                element.classList.remove("dn");
-            }
-        }
-    }
 }
