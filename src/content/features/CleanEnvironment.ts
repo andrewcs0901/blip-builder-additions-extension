@@ -1,6 +1,7 @@
 import Utils from "../../shared/Utils";
 import { isBuilderLoaded } from "../Content";
 import FeatureBase from "./FeatureBase";
+import { ICON_BUILDER, NODE_CONTAINER } from "../../shared/BuilderElements";
 
 export const USER_HEADER_SELECTOR = ".main-header-top:first-child";
 
@@ -51,9 +52,9 @@ export default class CleanEnvironment extends FeatureBase {
         const collapserContainer = document.createElement("div");
         (document.querySelector(".builder-footer") as HTMLElement).style.width = "fit-content";
         (document.querySelector(".builder-footer") as HTMLElement).style.height = "1em";
-        (document.querySelector(".builder-container") as HTMLElement).style.height = "100%";
-        (document.querySelector(".icon-button-list") as HTMLElement).style.top = "30vh";
-        (document.querySelector(".icon-button-list") as HTMLElement).style.position = "fixed";
+        (document.querySelector(NODE_CONTAINER) as HTMLElement).style.height = "100%";
+        (document.querySelector(ICON_BUILDER) as HTMLElement).style.top = "30vh";
+        (document.querySelector(ICON_BUILDER) as HTMLElement).style.position = "fixed";
         this.defaultNavBarHeight = (document.querySelector(".main-navbar-content") as HTMLElement).clientHeight;
 
         collapserContainer.innerHTML = html;

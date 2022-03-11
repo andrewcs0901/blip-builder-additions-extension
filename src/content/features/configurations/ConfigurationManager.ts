@@ -1,3 +1,4 @@
+import { ICON_BUILDER } from "../../../shared/BuilderElements";
 import Utils from "../../../shared/Utils";
 import { inject } from "../../Content";
 import FeatureBase from "../FeatureBase";
@@ -31,7 +32,7 @@ export default class ConfigurationManager extends FeatureBase {
         const res = await fetch(Utils.getUrl("resources/menuActionButton.html"));
         const html = await res.text();
 
-        const iconButtonList = document.querySelector(".icon-button-list");
+        const iconButtonList = document.querySelector(ICON_BUILDER);
         const addictionsButton = document.createElement("li");
 
         addictionsButton.id = "addictions-menu-button";
